@@ -6,24 +6,28 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // Définir l'association Many-to-Many avec ingredient
       Recipe.belongsToMany(models.Ingredient, {
-        through: 'recipe_ingredients', // Table de jointure
+        through: 'RecipeIngredient', // Table de jointure
         as: 'ingredients', // Nom de l'association
         foreignKey: 'recipeId' // Clé étrangère dans la table de jointure
       });
 
       Recipe.belongsToMany(models.Category, {
-        through:  'recipe_categories',
+        through:  'RecipeCategory',
         as: 'categories',
         foreignKey: 'recipeId',
       });
 
       Recipe.belongsToMany(models.Image, {
-        through: 'recipe_image',
+        through: 'RecipeImage',
         foreignKey: 'recipeId',
         otherKey: 'imageId',
         as: 'images'  // Alias pour accéder aux images d'une recette
       });
-      
+
+      Recipe.hasMany(models.Instruction, { 
+        as: 'instructions', 
+        foreignKey: 'recipeId' }
+      );  
     }
   }
 
@@ -42,7 +46,6 @@ module.exports = (sequelize, DataTypes) => {
     description:DataTypes.TEXT,
     preparationTime: DataTypes.INTEGER,
     cookingTime: DataTypes.INTEGER,
-    imageId: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Recipe',

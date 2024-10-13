@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
       // Définir l'association Many-to-Many avec le modèle Recipe
       Ingredient.belongsToMany(models.Recipe, {
         through: {
-          model: 'recipe_ingredient',
+          model: 'RecipeIngredient',
           unique: false,
         },
         as: 'recipe', // Nom de l'association

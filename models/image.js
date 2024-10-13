@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {   
       Image.belongsToMany(models.Recipe, {
-        through: 'recipe_image',
+        through: 'RecipeImage',
         foreignKey: 'imageId',
         otherKey: 'recipeId',
         as: 'recipes'  // Alias pour accéder aux recettes d'une image
@@ -24,14 +24,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
-    },
-    recipeId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'Recipe',
-        key: 'recipeId',
-      },
-      allowNull: false,
     },
     url: {
       type: DataTypes.STRING,

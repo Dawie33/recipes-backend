@@ -26,7 +26,6 @@ module.exports = (sequelize, DataTypes) => {
     recipeId: DataTypes.INTEGER,
     step: DataTypes.INTEGER,
     description: DataTypes.STRING,
-    allowNull: false,
   }, {
     sequelize,
     modelName: 'Instruction',
