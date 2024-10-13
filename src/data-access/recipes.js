@@ -11,16 +11,6 @@ const RecipesDAO = {
     });
   },
 
-  // Récupérer une recette par ID
-  getById: async (id) => {
-    return await Recipe.findByPk(id);
-  },
-
-  // Créer une nouvelle recette
-  create: async (recipeData) => {
-    return await Recipe.create(recipeData);
-  },
-
   // Mettre à jour une recette par ID
   update: async (id, recipeData) => {
     const [updated] = await Recipe.update(recipeData, {
