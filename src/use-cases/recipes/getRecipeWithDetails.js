@@ -1,9 +1,8 @@
 const { Recipe, Ingredient, Instruction, Image, Category } = require('../../../models');
 
-const getRecipeWithDetails = async (recipeId) => {
+const getRecipeWithDetails = async () => {
   try {
-    const recipe = await Recipe.findOne({
-      where: { recipeId },  // Filtrer la recette par son `recipeId`
+    const recipes = await Recipe.findAll({
       include: [
         {
           model: Instruction,
@@ -30,11 +29,11 @@ const getRecipeWithDetails = async (recipeId) => {
       ],
     });
 
-    return recipe;
+    return recipes;
   } catch (error) {
-    console.error('Erreur lors de la récupération de la recette :', error);
+    console.error('Erreur lors de la récupération des recettes :', error);
     throw error;
   }
 };
 
-module.exports = getRecipeWithDetails
+module.exports = getRecipeWithDetails;

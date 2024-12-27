@@ -1,4 +1,4 @@
-const list = require('./list');
+const list = require('./getRecipeWithDetails');
 const add = require('./add');
 const update = require('./update');
 const remove = require('./remove');

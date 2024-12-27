@@ -1,19 +1,21 @@
 const sequelize = require('../../../config/sequelize');
 const { Recipe, Ingredient, Instruction, Image, RecipeIngredient, RecipeImage, Category, RecipeCategory } = require('../../../models');
+const fs = require('fs');
+const path = require('path');
 
-const add = async (recipeData) => {
+const add = async (data,image) => {
   const transaction = await sequelize.transaction();
   try {
     // Création de la recette
     const newRecipe = await Recipe.create({
-      name: recipeData.name,
-      description: recipeData.description,
-      cookingTime: recipeData.cookingTime,
-      preparationTime: recipeData.preparationTime,
+      name: data.name,
+      description: data.description,
+      cookingTime: data.cookingTime,
+      preparationTime: data.preparationTime,
     }, { transaction });
 
     // Ajout des ingrédients
-    for (let ingredient of recipeData.ingredients) {
+    for (let ingredient of data.ingredients) {
       let [ingredientRecord] = await Ingredient.findOrCreate({
         where: { name: ingredient.name },
         defaults: { name: ingredient.name },
@@ -28,7 +30,7 @@ const add = async (recipeData) => {
     }
 
     // Ajout des instructions
-    for (let instruction of recipeData.instructions) {
+    for (let instruction of data.instructions) {
       await Instruction.create({
         recipeId: newRecipe.recipeId, // Utilisation de newRecipe.recipeId
         step: instruction.step,
@@ -37,10 +39,10 @@ const add = async (recipeData) => {
     }
 
     // Ajout de la catégorie
-    if (recipeData.category) {
+    if (data.category) {
       let [categoryRecord] = await Category.findOrCreate({
-        where: { name: recipeData.category.name },
-        defaults: { name: recipeData.category.name },
+        where: { name: data.category },
+        defaults: { name: data.category },
         transaction
       });
       await RecipeCategory.create({
@@ -50,17 +52,37 @@ const add = async (recipeData) => {
     }
 
     // Ajout de l'image
-    if (recipeData.image) {
-      const image = await Image.create({
-        url: recipeData.image.url,
-        description: recipeData.image.description
-      }, { transaction });
+    if (image) {
+      // Chemin absolu vers le dossier 'uploads' à la racine du projet
+      const uploadsDir = path.join(__dirname, 'uploads');
 
-      await RecipeImage.create({
-        recipeId: newRecipe.recipeId,  // Utilisation de newRecipe.recipeId
-        imageId: image.imageId  // Utilisation de image.imageId
-      }, { transaction });
+      // Créez le dossier 'uploads' s'il n'existe pas
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir);
+      }      
+      const filePath = path.join(uploadsDir, image.originalname);
+
+      fs.writeFileSync(filePath, image.buffer);
+
+    
+      // Ensuite, enregistrez l'URL ou le chemin du fichier dans la base de données
+      const imageRecord = await Image.create(
+        {
+          url: `/uploads/${image.originalname}`, // Utilisez l'URL ou le chemin du fichier
+          description: image.description || 'No description', // Ajoutez une description si nécessaire
+        },
+        { transaction }
+      );
+    
+      await RecipeImage.create(
+        {
+          recipeId: newRecipe.recipeId,
+          imageId: imageRecord.imageId,
+        },
+        { transaction }
+      );
     }
+    
 
     await transaction.commit();
     return newRecipe;
