@@ -1,15 +1,49 @@
 // data-access/recipeDAO.js
 
-const { Recipe } = require('../../models');
+const { Recipe, Ingredient, Instruction, Category } = require('../../models');
 
 const RecipesDAO = {
   // Récupérer toutes les recettes avec possibilité de pagination
   getAll: async (offset = 0, limit = 10) => {
-    return await Recipe.findAndCountAll({
-      offset,
-      limit,
-    });
+    let recipes = await Recipe.findAll({offset,limit})
+    const response = recipes.map(recipe => recipe.toJSON());
+    return response
   },
+
+  getOne: async (recipeId) => {
+    try {
+       let recipe = await Recipe.findByPk(recipeId, {
+      include: [
+        {
+          model: Instruction,
+          as: 'instructions', 
+          attributes: ['step', 'description'], 
+        },
+        {
+          model: Category,
+          as: 'categories', 
+          attributes: ['name'],
+        },
+        {
+          model: Ingredient,
+          as: 'ingredients', 
+          through: { attributes: ['quantity'] }, 
+          attributes: ['name','unit','image'],
+        },
+     
+      ],
+    });
+  
+    const response = recipe.toJSON();
+
+    return response
+   
+    } catch (error) {
+      throw new Error('Recipe not found: ' + error.message);
+    }
+   
+  },
+  
 
   // Mettre à jour une recette par ID
   update: async (id, recipeData) => {

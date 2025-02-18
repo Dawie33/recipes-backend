@@ -25,13 +25,20 @@ module.exports = (sequelize, DataTypes) => {
   Ingredient.init({
     ingredientId: {
       type: DataTypes.INTEGER,
-      primaryKey: true, // Clé primaire
-      autoIncrement: true // Auto-incrémentation
+      primaryKey: true, 
+      autoIncrement: true 
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false // Rendre ce champ obligatoire
-    }
+      allowNull: false 
+    },
+    unit: {
+      type: DataTypes.STRING
+    },
+    image: {
+      type: DataTypes.TEXT, 
+      allowNull: false, 
+    },
   }, {
     sequelize,
     modelName: 'Ingredient',

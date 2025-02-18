@@ -17,13 +17,6 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'recipeId',
       });
 
-      Recipe.belongsToMany(models.Image, {
-        through: 'RecipeImage',
-        foreignKey: 'recipeId',
-        otherKey: 'imageId',
-        as: 'images'  // Alias pour accéder aux images d'une recette
-      });
-
       Recipe.hasMany(models.Instruction, { 
         as: 'instructions', 
         foreignKey: 'recipeId' }
@@ -42,6 +35,10 @@ module.exports = (sequelize, DataTypes) => {
     name: {
       type: DataTypes.STRING,
       allowNull: false // Le nom est obligatoire
+    },
+    image: {
+      type: DataTypes.TEXT, 
+      allowNull: false, 
     },
     description:DataTypes.TEXT,
     preparationTime: DataTypes.INTEGER,

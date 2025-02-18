@@ -1,8 +1,8 @@
-const list = require('./getRecipeWithDetails');
+const list = require('./list');
 const add = require('./add');
 const update = require('./update');
 const remove = require('./remove');
-const getById = require('./getRecipeWithDetails');
+const getById = require('./getById');
 
 module.exports = {
   list,

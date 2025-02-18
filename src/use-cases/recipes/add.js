@@ -1,33 +1,54 @@
 const sequelize = require('../../../config/sequelize');
-const { Recipe, Ingredient, Instruction, Image, RecipeIngredient, RecipeImage, Category, RecipeCategory } = require('../../../models');
-const fs = require('fs');
-const path = require('path');
+const { Recipe, Ingredient, Instruction, RecipeIngredient, Category, RecipeCategory } = require('../../../models');
 
-const add = async (data,image) => {
+
+const add = async (data,mainImage,ingredientImages) => {
   const transaction = await sequelize.transaction();
   try {
     // Création de la recette
+    const encodedMainImage = mainImage.buffer.toString('base64');
     const newRecipe = await Recipe.create({
       name: data.name,
       description: data.description,
       cookingTime: data.cookingTime,
       preparationTime: data.preparationTime,
+      image : encodedMainImage || null
     }, { transaction });
 
-    // Ajout des ingrédients
-    for (let ingredient of data.ingredients) {
+   // Ajout des ingrédients
+    for (let i = 0; i < data.ingredients.length; i++) {
+      const ingredient = data.ingredients[i]; // Récupérer l'ingrédient à l'index courant
+
+      // Trouver l'image associée à cet ingrédient
+      const ingredientImage = ingredientImages.find((file) => {
+        const match = file.fieldname.match(/ingredients\[(\d+)\]\[image\]/); // Extraire l'index
+        return match && parseInt(match[1], 10) === i; // Vérifier que l'index correspond
+      });
+
+      // Associer l'image à l'ingrédient
+      if (ingredientImage) {
+        ingredient.image = ingredientImage.buffer.toString('base64');
+      }
+
+      // Trouver ou créer l'ingrédient
       let [ingredientRecord] = await Ingredient.findOrCreate({
         where: { name: ingredient.name },
-        defaults: { name: ingredient.name },
-        transaction
+        defaults: { 
+          name: ingredient.name,
+          image: ingredient.image || null, // Associer l'image si présente
+          unit: ingredient.unit || null,   
+        },
+        transaction,
       });
-      // Utilisation de newRecipe.recipeId et ingredientRecord.ingredientId
+
+      // Associer l'ingrédient à la recette
       await RecipeIngredient.create({
         recipeId: newRecipe.recipeId,  // Utilisation de newRecipe.recipeId
         ingredientId: ingredientRecord.ingredientId,  // Utilisation de ingredientRecord.ingredientId
-        quantity: ingredient.quantity
+        quantity: ingredient.quantity,
       }, { transaction });
     }
+
 
     // Ajout des instructions
     for (let instruction of data.instructions) {
@@ -51,38 +72,6 @@ const add = async (data,image) => {
       }, { transaction });
     }
 
-    // Ajout de l'image
-    if (image) {
-      // Chemin absolu vers le dossier 'uploads' à la racine du projet
-      const uploadsDir = path.join(__dirname, 'uploads');
-
-      // Créez le dossier 'uploads' s'il n'existe pas
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir);
-      }      
-      const filePath = path.join(uploadsDir, image.originalname);
-
-      fs.writeFileSync(filePath, image.buffer);
-
-    
-      // Ensuite, enregistrez l'URL ou le chemin du fichier dans la base de données
-      const imageRecord = await Image.create(
-        {
-          url: `/uploads/${image.originalname}`, // Utilisez l'URL ou le chemin du fichier
-          description: image.description || 'No description', // Ajoutez une description si nécessaire
-        },
-        { transaction }
-      );
-    
-      await RecipeImage.create(
-        {
-          recipeId: newRecipe.recipeId,
-          imageId: imageRecord.imageId,
-        },
-        { transaction }
-      );
-    }
-    
 
     await transaction.commit();
     return newRecipe;

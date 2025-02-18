@@ -30,8 +30,10 @@ const genericController = {
   create: (useCase) => async (req, res) => {
     try {
       const data = req.body;
-      const image = req.file;
-      const result = await useCase.add(data,image); // Appel générique de la couche d'accès aux données
+      const mainImage = req.files.find((file) => file.fieldname === 'image'); // Image principale
+      const ingredientImages = req.files.filter((file) => file.fieldname.startsWith('ingredients')); // Images des ingrédients
+  
+      const result = await useCase.add(data,mainImage,ingredientImages); // Appel générique de la couche d'accès aux données
       res.status(201).json(result);
     } catch (error) {
       console.error('Erreur lors de la création :', error);
